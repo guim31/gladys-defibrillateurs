@@ -108,7 +108,9 @@ export function whereText(item, language) {
 const slotsText = (slots, language) =>
   slots.length === 0
     ? say(TEXT, language, 'closed')
-    : slots.map(({ from, to }) => `${hhmm(from)}–${hhmm(Math.min(to, DAY_MINUTES))}`).join(', ');
+    : slots
+        .map(({ from, to }) => `${hhmm(from)}–${hhmm(to > DAY_MINUTES ? to - DAY_MINUTES : to)}`)
+        .join(', ');
 
 /**
  * The declared hours in a language, grouped by consecutive days with the same
@@ -179,7 +181,15 @@ export function placeStates(gladys, key, view, language) {
     text('hours', hoursText(nearest.schedule, language));
     value('available', nearest.available === true ? 1 : 0);
   } else {
-    text('nearest', say(TEXT, language, 'none', { km: SEARCH_KM }));
+    // None within 5 km: every feature says so, none keeps the values of a
+    // former location (a house moved).
+    const none = say(TEXT, language, 'none', { km: SEARCH_KM });
+    value('distance', SEARCH_KM * 1000);
+    text('nearest', none);
+    text('location', none);
+    text('access', none);
+    text('hours', none);
+    value('available', 0);
   }
   value('count', view.count);
   value('available_count', view.availableCount);

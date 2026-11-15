@@ -109,7 +109,7 @@ export const TEXT = {
     statusUnknown: 'hours not declared',
     noPlace: 'No place is watched: add one in the Discover tab.',
     report: ({ places, items, date }) =>
-      `${places} place(s) watched, ${items} defibrillator(s) within 5 km. Data of ${date}.`,
+      `${places} place(s) added, ${items} defibrillator(s) within 5 km. Data of ${date}.`,
     reportNone: 'No data yet.',
     reportError: ({ error }) => `Last download failed: ${error}`,
     reportNoPlace:
@@ -150,7 +150,7 @@ export const TEXT = {
     statusUnknown: 'horaires non déclarés',
     noPlace: "Aucun lieu suivi : ajoutez-en un depuis l'onglet Découverte.",
     report: ({ places, items, date }) =>
-      `${places} lieu(x) suivi(s), ${items} DAE à moins de 5 km. Données du ${date}.`,
+      `${places} lieu(x) ajouté(s), ${items} DAE à moins de 5 km. Données du ${date}.`,
     reportNone: 'Pas encore de données.',
     reportError: ({ error }) => `Le dernier téléchargement a échoué : ${error}`,
     reportNoPlace:
@@ -191,7 +191,7 @@ export const TEXT = {
     statusUnknown: 'Zeiten nicht angegeben',
     noPlace: 'Kein Ort verfolgt: Füge einen im Tab „Entdecken“ hinzu.',
     report: ({ places, items, date }) =>
-      `${places} verfolgte(r) Ort(e), ${items} Defibrillator(en) im Umkreis von 5 km. Daten vom ${date}.`,
+      `${places} hinzugefügte(r) Ort(e), ${items} Defibrillator(en) im Umkreis von 5 km. Daten vom ${date}.`,
     reportNone: 'Noch keine Daten.',
     reportError: ({ error }) => `Der letzte Download ist fehlgeschlagen: ${error}`,
     reportNoPlace:
@@ -232,7 +232,7 @@ export const TEXT = {
     statusUnknown: 'horario no declarado',
     noPlace: 'Ningún lugar seguido: añada uno desde la pestaña Descubrir.',
     report: ({ places, items, date }) =>
-      `${places} lugar(es) seguido(s), ${items} desfibrilador(es) a menos de 5 km. Datos del ${date}.`,
+      `${places} lugar(es) añadido(s), ${items} desfibrilador(es) a menos de 5 km. Datos del ${date}.`,
     reportNone: 'Todavía no hay datos.',
     reportError: ({ error }) => `La última descarga ha fallado: ${error}`,
     reportNoPlace:

@@ -18,7 +18,7 @@ import { createLogger } from '@gladysassistant/integration-sdk';
 import { localTime } from './clock.js';
 import { DEFAULT_CONFIG, normalizeConfig, slugOf } from './config.js';
 import { PLACE_TYPE, buildPlaceDevice, dateText, placeStates } from './devices.js';
-import { MIN_ROWS, SEARCH_KM, distanceKm, nearestOf, readGeodae } from './geodae.js';
+import { MIN_ROWS, SEARCH_KM, distanceKm, nearestOf, readGeodae, zoneOf } from './geodae.js';
 import { availableAt } from './hours.js';
 import { DATA_UNAVAILABLE, TEXT, say } from './messages.js';
 
@@ -30,14 +30,12 @@ export const HEARTBEAT_MS = 6 * 3600 * 1000;
 export const TICK_MS = 60 * 1000;
 export const READ_MS = 7 * 24 * 3600 * 1000;
 export const RETRY_MS = 3 * 3600 * 1000;
+export const HOUSES_MS = 3600 * 1000;
 export const WIDGET_KEY = 'nearest';
 export const CACHE_FILE = 'geodae-cache.json';
 const CACHE_VERSION = 1;
 // A place this close to a place of the last download is covered by it.
 const COVER_KM = 0.2;
-
-/** The zone of the clock: the one of Gladys (TZ, set by the supervisor). */
-const ZONE = process.env.TZ || Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Paris';
 
 const finite = (value) => {
   const number = Number(value);
@@ -53,7 +51,6 @@ export class Defibrillators {
    * @param {boolean} [options.timers] false in the tests: they call refresh() and tick()
    * @param {string|null} [options.dataDir] where the kept defibrillators are saved, null: nowhere
    * @param {number} [options.minRows] rows a complete file holds at least
-   * @param {string} [options.zone] time zone of the declared hours
    */
   constructor({
     gladys,
@@ -62,7 +59,6 @@ export class Defibrillators {
     timers = true,
     dataDir = '/data',
     minRows = MIN_ROWS,
-    zone = ZONE,
   }) {
     this.gladys = gladys;
     this.fetch = fetch;
@@ -70,10 +66,10 @@ export class Defibrillators {
     this.useTimers = timers;
     this.dataDir = dataDir;
     this.minRows = minRows;
-    this.zone = zone;
     this.config = normalizeConfig(DEFAULT_CONFIG);
     this.houses = []; // places of the located houses
     this.houseError = false;
+    this.housesReadAt = 0;
     this.data = null; // { items, updatedAt, fetchedAt, coverage }
     this.lists = new Map(); // place key → { signature, list }
     this.error = null;
@@ -154,6 +150,7 @@ export class Defibrillators {
 
   /** The located houses of Gladys, as places. */
   async readHouses() {
+    this.housesReadAt = this.now();
     try {
       const houses = await this.gladys.getHouses();
       this.houses = (houses ?? [])
@@ -308,9 +305,13 @@ export class Defibrillators {
   async readAll(forceDiscovery) {
     await this.readHouses();
     const places = this.neededPlaces();
-    const placesChanged = this.data && !this.covers(places);
-    // A failed download waits for its retry, unless the places changed.
-    if (this.needsDownload(places) && (this.now() >= this.retryAt || placesChanged)) {
+    const placesChanged = Boolean(this.data) && !this.covers(places);
+    // A failed download waits for its retry, unless the places changed or the
+    // user asked (a scan, a saved configuration).
+    if (
+      this.needsDownload(places) &&
+      (this.now() >= this.retryAt || placesChanged || forceDiscovery)
+    ) {
       await this.download(places);
     }
     await this.publishDiscovered({ force: forceDiscovery });
@@ -446,12 +447,20 @@ export class Defibrillators {
    * availability, the counts within the radius.
    */
   view(place) {
-    const local = localTime(this.now(), this.zone);
+    // The hours are read in the zone of each defibrillator (overseas ones).
+    const locals = new Map();
+    const localOf = (department) => {
+      const zone = zoneOf(department);
+      if (!locals.has(zone)) {
+        locals.set(zone, localTime(this.now(), zone));
+      }
+      return locals.get(zone);
+    };
     const radius = this.config.radius;
     let count = 0;
     let availableCount = 0;
     const list = this.listOf(place).map((item) => {
-      const available = availableAt(item.schedule, local, item.department);
+      const available = availableAt(item.schedule, localOf(item.department), item.department);
       if (item.meters <= radius) {
         count += 1;
         if (available === true) {
@@ -470,11 +479,12 @@ export class Defibrillators {
 
   /** One evaluation of every place added; the weekly download when it is due. */
   async tick({ refresh = true } = {}) {
+    // The houses are read again every hour: a house newly located or moved.
+    const housesDue = this.now() - this.housesReadAt >= HOUSES_MS;
     if (
       refresh &&
       !this.refreshing &&
-      this.needsDownload(this.neededPlaces()) &&
-      this.now() >= this.retryAt
+      (housesDue || (this.needsDownload(this.neededPlaces()) && this.now() >= this.retryAt))
     ) {
       // In the background: the evaluation does not wait for 80 MB.
       this.refresh();
@@ -524,8 +534,8 @@ export class Defibrillators {
     const message = {};
     for (const language of Object.keys(TEXT)) {
       const lines = [];
-      const places = this.neededPlaces().length;
-      if (places === 0) {
+      const places = this.watched().length;
+      if (this.neededPlaces().length === 0) {
         lines.push(say(TEXT, language, 'reportNoPlace'));
       } else if (this.data) {
         lines.push(

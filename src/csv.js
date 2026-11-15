@@ -5,6 +5,10 @@
 // in memory, only the current row.
 // -----------------------------------------------------------------------------
 
+// No field of the file comes near this: a stray quote would otherwise swallow
+// the rest of the file into one field.
+export const MAX_FIELD = 100000;
+
 export class CsvParser {
   constructor(separator = ';') {
     this.separator = separator;
@@ -13,6 +17,13 @@ export class CsvParser {
     this.quoted = false; // inside a quoted field
     this.quotePending = false; // a quote seen inside a quoted field: end or "" escape
     this.started = false; // the current row has content
+  }
+
+  grow(text) {
+    this.field += text;
+    if (this.field.length > MAX_FIELD) {
+      throw new Error('CSV field too long');
+    }
   }
 
   endField() {
@@ -29,7 +40,7 @@ export class CsvParser {
       if (this.quotePending) {
         this.quotePending = false;
         if (char === '"') {
-          this.field += '"';
+          this.grow('"');
           continue;
         }
         this.quoted = false;
@@ -38,7 +49,7 @@ export class CsvParser {
         if (char === '"') {
           this.quotePending = true;
         } else {
-          this.field += char;
+          this.grow(char);
         }
         continue;
       }

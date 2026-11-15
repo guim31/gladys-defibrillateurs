@@ -1,13 +1,12 @@
 // -----------------------------------------------------------------------------
-// Calendar helpers. The sources give wall-clock hours of the place of the
-// site: they are read in its time zone (Paris for every source today), not in
-// the zone of Gladys. Day arithmetic runs on 'YYYY-MM-DD' strings at UTC
-// midnight, where no day lasts 23 or 25 hours.
+// Calendar helpers. The declared hours are wall-clock hours of the place of
+// the defibrillator: they are read in its time zone (src/geodae.js zoneOf,
+// Paris or an overseas zone), not in the zone of Gladys. Day arithmetic runs
+// on 'YYYY-MM-DD' strings at UTC midnight, where no day lasts 23 or 25 hours.
 // -----------------------------------------------------------------------------
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export const PARIS = 'Europe/Paris';
 /** 'YYYY-MM-DD' plus a number of days. */
 export function addDays(date, days) {
   const [year, month, day] = date.split('-').map(Number);

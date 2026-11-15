@@ -147,7 +147,8 @@ export function parseHours(text) {
     return slots.length === 1 && slots[0].from === 0 && slots[0].to >= DAY_MINUTES;
   });
   // Holidays and dates of the year may still close it.
-  schedule.always &&= rules.every((rule) => !(rule.ph || rule.dates) || rule.slots.length > 0);
+  const wholeDay = (slots) => slots.some((s) => s.from === 0 && s.to >= DAY_MINUTES);
+  schedule.always &&= rules.every((rule) => !(rule.ph || rule.dates) || wholeDay(rule.slots));
   return schedule;
 }
 

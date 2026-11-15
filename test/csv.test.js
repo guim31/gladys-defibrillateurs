@@ -31,3 +31,8 @@ test('blank lines are skipped, a final line break adds no row', () => {
     ['1', '2'],
   ]);
 });
+
+test('a stray quote cannot swallow the rest of the file', () => {
+  const parser = new CsvParser(';');
+  assert.throws(() => parser.push(`a;"b\n${'x;'.repeat(60000)}`), /too long/);
+});

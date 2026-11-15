@@ -63,6 +63,25 @@ function addressOf(row) {
   return [street, city].filter(Boolean).join(', ');
 }
 
+// The declared hours are wall-clock hours of the place of the defibrillator.
+const OVERSEAS_ZONES = {
+  971: 'America/Guadeloupe',
+  972: 'America/Martinique',
+  973: 'America/Cayenne',
+  974: 'Indian/Reunion',
+  975: 'America/Miquelon',
+  976: 'Indian/Mayotte',
+  977: 'America/St_Barthelemy',
+  978: 'America/Marigot',
+  986: 'Pacific/Wallis',
+  987: 'Pacific/Tahiti',
+  988: 'Pacific/Noumea',
+};
+export const PARIS = 'Europe/Paris';
+
+/** The time zone of a department. */
+export const zoneOf = (department) => OVERSEAS_ZONES[department] ?? PARIS;
+
 /** A CSV row as a defibrillator, or null when it is not usable. */
 export function defibrillatorOf(row) {
   const lat = Number(row.c_lat_coor1);
@@ -152,6 +171,10 @@ export async function readGeodae(
       header = cells.map((cell) => cell.replace(/^\uFEFF/, '').trim());
       latAt = header.indexOf('c_lat_coor1');
       lonAt = header.indexOf('c_long_coor1');
+      if (latAt < 0 || lonAt < 0) {
+        // Not the expected file: stop now rather than read 80 MB of it.
+        throw new SourceError('data.gouv.fr: unexpected file format');
+      }
       return;
     }
     total += 1;

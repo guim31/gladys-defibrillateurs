@@ -73,7 +73,7 @@ language):
 
 | Feature                        | Type     | Value                                              |
 | ------------------------------ | -------- | -------------------------------------------------- |
-| Nearest defibrillator distance | distance | in metres, within 5 km                             |
+| Nearest defibrillator distance | distance | in metres, 5,000 when none within 5 km             |
 | Nearest defibrillator          | text     | name and address                                   |
 | Exact location                 | text     | indoor or outdoor, floor, spot                     |
 | Access                         | text     | free or restricted access                          |

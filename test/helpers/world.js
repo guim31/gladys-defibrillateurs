@@ -124,7 +124,6 @@ export async function createWorld({
     now: clock.now,
     dataDir,
     minRows: 100,
-    zone: 'Europe/Paris',
   });
   const world = { gladys, fake: gladys.fake, app, service: app.service, network, clock };
   if (connect) {

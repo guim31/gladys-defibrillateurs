@@ -74,7 +74,7 @@ Sprache):
 
 | Funktion                               | Typ        | Wert                                                        |
 | -------------------------------------- | ---------- | ----------------------------------------------------------- |
-| Entfernung des nächsten Defibrillators | Entfernung | in Metern, bis 5 km                                         |
+| Entfernung des nächsten Defibrillators | Entfernung | in Metern, 5.000 wenn keiner im Umkreis von 5 km            |
 | Nächster Defibrillator                 | Text       | Name und Adresse                                            |
 | Genauer Standort                       | Text       | innen oder außen, Etage, Stelle                             |
 | Zugang                                 | Text       | frei oder eingeschränkt                                     |

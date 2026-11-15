@@ -15,7 +15,7 @@ const logger = createLogger({ name: 'defibrillateurs-app' });
 
 /**
  * @param {object} gladys GladysIntegration instance
- * @param {object} [options] test seams: fetch, now, timers, dataDir, minRows, zone
+ * @param {object} [options] test seams: fetch, now, timers, dataDir, minRows
  */
 export function registerHandlers(gladys, options = {}) {
   const service = new Defibrillators({ gladys, ...options, timers: options.timers ?? true });

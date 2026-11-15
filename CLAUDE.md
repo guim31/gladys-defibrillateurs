@@ -285,3 +285,8 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
   du dernier téléchargement (`coverage`, 200 m) ; un lieu hors couverture relance le téléchargement.
 - **Pas de déclencheur** : « aucun DAE disponible maintenant » se fait avec le déclencheur d'appareil du
   cœur sur `available_count` = 0.
+- **Fuseau** : les horaires déclarés sont lus dans le fuseau du DAE (`zoneOf` du département : Paris, ou
+  Guadeloupe, Réunion, Mayotte…), pas dans le `TZ` de Gladys. **Aucun DAE à moins de 5 km** : toutes les
+  fonctionnalités le disent (distance 5000, `available` 0, textes « Aucun DAE… »), pour qu'aucune ne garde les
+  valeurs d'un ancien emplacement. Les maisons sont relues toutes les heures par la minute ; un scan ou une
+  configuration enregistrée relance un téléchargement raté sans attendre les 3 h.

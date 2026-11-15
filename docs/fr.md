@@ -76,7 +76,7 @@ configurée) :
 
 | Fonctionnalité                       | Type     | Valeur                                                    |
 | ------------------------------------ | -------- | --------------------------------------------------------- |
-| Distance du DAE le plus proche       | distance | en mètres, jusqu'à 5 km                                   |
+| Distance du DAE le plus proche       | distance | en mètres, 5 000 si aucun à moins de 5 km                 |
 | DAE le plus proche                   | texte    | nom et adresse                                            |
 | Emplacement précis                   | texte    | intérieur ou extérieur, étage, emplacement                |
 | Accès                                | texte    | accès libre ou restreint                                  |

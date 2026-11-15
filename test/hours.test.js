@@ -98,3 +98,12 @@ test('a slot past midnight carries over to the next morning', () => {
   assert.equal(at(text, '2026-11-21', '02:30'), false);
   assert.equal(at(text, '2026-11-19', '01:00'), false); // Thursday
 });
+
+test('a date or holiday rule with partial hours is not "always available"', () => {
+  const autumn = 'Mo-Su 00:00-23:59; Oct 01-Dec 31 08:00-17:00';
+  assert.equal(parseHours(autumn).always, false);
+  assert.equal(at(autumn, '2026-11-16', '22:00'), false);
+  assert.equal(at(autumn, '2026-06-16', '22:00'), true);
+  assert.equal(at('24/7; PH 08:00-12:00', '2026-12-25', '20:00'), false);
+  assert.equal(hoursText(parseHours('Mo-Su 22:00-06:00'), 'en'), 'every day 22:00–06:00');
+});

@@ -76,7 +76,7 @@ configurado):
 
 | Función                                 | Tipo      | Valor                                                |
 | --------------------------------------- | --------- | ---------------------------------------------------- |
-| Distancia del desfibrilador más cercano | distancia | en metros, hasta 5 km                                |
+| Distancia del desfibrilador más cercano | distancia | en metros, 5.000 si ninguno a menos de 5 km          |
 | Desfibrilador más cercano               | texto     | nombre y dirección                                   |
 | Ubicación exacta                        | texto     | interior o exterior, planta, lugar                   |
 | Acceso                                  | texto     | acceso libre o restringido                           |

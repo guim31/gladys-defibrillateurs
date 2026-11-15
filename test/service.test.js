@@ -95,12 +95,12 @@ test('a village: a 24/7 defibrillator under a porch, available at night', async 
   assert.equal(lastState(world, village, 'available_count'), 2);
 });
 
-test('no defibrillator within 5 km: a text says so, no distance', async (t) => {
+test('no defibrillator within 5 km: a text says so, the distance at its 5 km bound', async (t) => {
   const world = await createWorld({ config: { places: PLACES } });
   t.after(() => world.app.stop());
   const peak = await create(world, 'Pic');
   assert.equal(lastState(world, peak, 'nearest'), 'Aucun DAE à moins de 5 km');
-  assert.equal(lastState(world, peak, 'distance'), undefined);
+  assert.equal(lastState(world, peak, 'distance'), 5000);
   assert.equal(lastState(world, peak, 'count'), 0);
   assert.equal(lastState(world, peak, 'available_count'), 0);
   const result = await world.fake.sceneAction('nearest', { place: peak.external_id });
@@ -312,4 +312,31 @@ test('the features of a device and the widget states are the published ones', as
     assert.ok(featureId(device, key), key);
   }
   assert.equal(device.features.find((f) => f.external_id.endsWith(':distance')).unit, 'm');
+});
+
+test('no data yet: a scan or a saved configuration downloads at once, not 3 hours later', async (t) => {
+  const network = createFetch(new TypeError('fetch failed'));
+  const world = await createWorld({ network });
+  t.after(() => world.app.stop());
+  network.route = EXTRACT;
+  await world.fake.scanRequest();
+  await world.service.refreshing;
+  assert.equal(network.calls.length, 2);
+  assert.ok(world.service.data);
+});
+
+test('a house moved where no defibrillator is within 5 km: no feature keeps the old values', async (t) => {
+  const world = await createWorld();
+  t.after(() => world.app.stop());
+  const house = await create(world, 'Maison');
+  world.fake.houses[0].latitude = MOUNTAIN.lat;
+  world.fake.houses[0].longitude = MOUNTAIN.lon;
+  // Read again within the hour, by the minute clock alone.
+  await at(world, world.clock.time + 61 * MINUTE);
+  assert.equal(world.network.calls.length, 2);
+  assert.equal(lastState(world, house, 'distance'), 5000);
+  assert.equal(lastState(world, house, 'available'), 0);
+  for (const key of ['nearest', 'location', 'access', 'hours']) {
+    assert.equal(lastState(world, house, key), 'Aucun DAE à moins de 5 km', key);
+  }
 });
