@@ -1,177 +1,348 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "Défibrillateurs",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Nearest defibrillators (Géo'DAE): distance, exact spot, access, available now or not.",
+    "fr": "DAE les plus proches (Géo'DAE) : distance, emplacement, accès, disponible maintenant ou non.",
+    "de": "Nächste Defibrillatoren (Géo'DAE): Entfernung, Standort, Zugang, jetzt verfügbar oder nicht.",
+    "es": "Desfibriladores más cercanos (Géo'DAE): distancia, ubicación, acceso, disponible ahora o no."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
-  "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "docker_image": "ghcr.io/guim31/gladys-defibrillateurs:1.0.0",
+  "gladys_version": ">=5.3.0",
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-defibrillateurs/main/cover.png",
+  "categories": ["services"],
+  "transports": ["local"],
+  "countries": ["FR"],
+  "keywords": [
+    "défibrillateur",
+    "DAE",
+    "AED",
+    "Géo'DAE",
+    "urgence",
+    "santé",
+    "premiers secours",
+    "open data"
+  ],
+  "location": true,
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
-      "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+      "label": {
+        "en": "How it works",
+        "fr": "Fonctionnement",
+        "de": "So funktioniert es",
+        "es": "Funcionamiento"
       },
-      "links": [
+      "description": {
+        "en": "Each located house of Gladys, and each place listed below, is offered in the Discover tab: add it to follow its nearest defibrillators. The national Géo'DAE file is downloaded once a week. In an emergency, call 15 or 112 first.",
+        "fr": "Chaque maison de Gladys dont la position est renseignée, et chaque lieu listé ci-dessous, est proposé dans l'onglet Découverte : ajoutez-le pour suivre ses DAE les plus proches. Le fichier national Géo'DAE est téléchargé une fois par semaine. En cas d'urgence, appelez d'abord le 15 ou le 112.",
+        "de": "Jedes Haus in Gladys mit Standort und jeder unten aufgeführte Ort wird im Tab „Entdecken“ angeboten: Füge ihn hinzu, um seine nächsten Defibrillatoren zu verfolgen. Die nationale Géo'DAE-Datei wird einmal pro Woche geladen. Im Notfall ruf zuerst 15 oder 112 an.",
+        "es": "Cada casa de Gladys con ubicación, y cada lugar indicado abajo, se propone en la pestaña Descubrir: añádalo para seguir sus desfibriladores más cercanos. El archivo nacional Géo'DAE se descarga una vez por semana. En caso de emergencia, llame primero al 15 o al 112."
+      }
+    },
+    {
+      "key": "radius",
+      "type": "number",
+      "default": 1000,
+      "min": 100,
+      "max": 5000,
+      "required": false,
+      "label": {
+        "en": "Radius (m)",
+        "fr": "Rayon (m)",
+        "de": "Umkreis (m)",
+        "es": "Radio (m)"
+      },
+      "description": {
+        "en": "For the counts of defibrillators around each place, as the crow flies. The nearest one is searched up to 5 km.",
+        "fr": "Pour le décompte des DAE autour de chaque lieu, à vol d'oiseau. Le plus proche est cherché jusqu'à 5 km.",
+        "de": "Für die Zählung der Defibrillatoren um jeden Ort, Luftlinie. Der nächste wird bis 5 km gesucht.",
+        "es": "Para el recuento de desfibriladores alrededor de cada lugar, en línea recta. El más cercano se busca hasta 5 km."
+      }
+    },
+    {
+      "key": "places",
+      "type": "string",
+      "default": "",
+      "required": false,
+      "label": {
+        "en": "Other places",
+        "fr": "Autres lieux",
+        "de": "Weitere Orte",
+        "es": "Otros lugares"
+      },
+      "placeholder": {
+        "en": "School: 43.6045, 1.4440; Club: 43.5830, 1.4340",
+        "fr": "École : 43.6045, 1.4440 ; Club : 43.5830, 1.4340",
+        "de": "Schule: 43.6045, 1.4440; Verein: 43.5830, 1.4340",
+        "es": "Colegio: 43.6045, 1.4440; Club: 43.5830, 1.4340"
+      },
+      "description": {
+        "en": "Up to 5 places, \"Name: latitude, longitude\", separated by semicolons. Rename a place and it becomes a new device.",
+        "fr": "Jusqu'à 5 lieux, « Nom : latitude, longitude », séparés par des points-virgules. Renommer un lieu en fait un nouvel appareil.",
+        "de": "Bis zu 5 Orte, „Name: Breitengrad, Längengrad“, durch Semikolons getrennt. Ein umbenannter Ort wird ein neues Gerät.",
+        "es": "Hasta 5 lugares, «Nombre: latitud, longitud», separados por punto y coma. Renombrar un lugar lo convierte en un dispositivo nuevo."
+      }
+    },
+    {
+      "key": "language",
+      "type": "select",
+      "default": "fr",
+      "label": {
+        "en": "Language of names and messages",
+        "fr": "Langue des noms et des messages",
+        "de": "Sprache der Namen und Meldungen",
+        "es": "Idioma de los nombres y mensajes"
+      },
+      "description": {
+        "en": "Feature names are fixed when a device is added.",
+        "fr": "Les noms des fonctionnalités sont figés à l'ajout d'un appareil.",
+        "de": "Die Namen der Funktionen werden beim Hinzufügen eines Geräts festgelegt.",
+        "es": "Los nombres de las funciones se fijan al añadir un dispositivo."
+      },
+      "options": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
+          }
         }
       ]
-    },
-    {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
-      },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
-    },
-    {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
-      },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
-    },
-    {
-      "key": "unit",
-      "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
-      "required": false,
-      "default": "celsius",
-      "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
-      ]
-    },
-    {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
-      "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
-      },
-      "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
-      "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ]
-    }
-  ],
-  "scene_triggers": [
-    {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
-      "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+      "key": "status",
+      "label": {
+        "en": "Status",
+        "fr": "État",
+        "de": "Status",
+        "es": "Estado"
       },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
-        },
-        {
-          "key": "target",
-          "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
-          "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
-          ]
-        }
-      ],
-      "variables": [
-        {
-          "key": "target",
-          "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
-        }
-      ]
+      "description": {
+        "en": "Places watched, defibrillators kept, date of the data and last error.",
+        "fr": "Lieux suivis, DAE retenus, date des données et dernière erreur.",
+        "de": "Verfolgte Orte, behaltene Defibrillatoren, Datenstand und letzter Fehler.",
+        "es": "Lugares seguidos, desfibriladores retenidos, fecha de los datos y último error."
+      },
+      "timeout_seconds": 30,
+      "fields": []
     }
   ],
   "scene_actions": [
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
+      "key": "nearest",
+      "label": {
+        "en": "Nearest defibrillator",
+        "fr": "DAE le plus proche",
+        "de": "Nächster Defibrillator",
+        "es": "Desfibrilador más cercano"
+      },
       "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+        "en": "The nearest defibrillator of a place in a sentence ready to send: distance, address, spot, access, available now.",
+        "fr": "Le DAE le plus proche d'un lieu en une phrase prête à envoyer : distance, adresse, emplacement, accès, disponibilité.",
+        "de": "Der nächste Defibrillator eines Orts in einem Satz zum Verschicken: Entfernung, Adresse, Standort, Zugang, Verfügbarkeit.",
+        "es": "El desfibrilador más cercano de un lugar en una frase lista para enviar: distancia, dirección, ubicación, acceso, disponibilidad."
       },
       "timeout_seconds": 15,
       "fields": [
         {
-          "key": "device",
+          "key": "place",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
+          "required": false,
+          "label": {
+            "en": "Place",
+            "fr": "Lieu",
+            "de": "Ort",
+            "es": "Lugar"
+          },
+          "description": {
+            "en": "Empty: the first watched place.",
+            "fr": "Vide : le premier lieu suivi.",
+            "de": "Leer: der erste verfolgte Ort.",
+            "es": "Vacío: el primer lugar seguido."
+          }
         }
       ],
       "outputs": [
         {
-          "key": "signalled",
-          "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "key": "sentence",
+          "type": "string",
+          "label": {
+            "en": "Sentence",
+            "fr": "Phrase",
+            "de": "Satz",
+            "es": "Frase"
+          }
+        },
+        {
+          "key": "distance",
+          "type": "number",
+          "label": {
+            "en": "Distance (m, -1 if none within 5 km)",
+            "fr": "Distance (m, -1 si aucun à 5 km)",
+            "de": "Entfernung (m, -1 wenn keiner im Umkreis von 5 km)",
+            "es": "Distancia (m, -1 si ninguno a 5 km)"
+          }
+        },
+        {
+          "key": "available_now",
+          "type": "number",
+          "label": {
+            "en": "Available now (1 or 0)",
+            "fr": "Disponible maintenant (1 ou 0)",
+            "de": "Jetzt verfügbar (1 oder 0)",
+            "es": "Disponible ahora (1 o 0)"
+          }
+        },
+        {
+          "key": "available_count",
+          "type": "number",
+          "label": {
+            "en": "Available now in the radius",
+            "fr": "Disponibles maintenant dans le rayon",
+            "de": "Jetzt verfügbar im Umkreis",
+            "es": "Disponibles ahora en el radio"
+          }
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "nearest",
+      "label": {
+        "en": "Nearest defibrillators",
+        "fr": "DAE les plus proches",
+        "de": "Nächste Defibrillatoren",
+        "es": "Desfibriladores más cercanos"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "description": {
+        "en": "The nearest defibrillators of a place: distance, access, available now, hours and map.",
+        "fr": "Les DAE les plus proches d'un lieu : distance, accès, disponibilité, horaires et carte.",
+        "de": "Die nächsten Defibrillatoren eines Orts: Entfernung, Zugang, Verfügbarkeit, Zeiten und Karte.",
+        "es": "Los desfibriladores más cercanos de un lugar: distancia, acceso, disponibilidad, horario y mapa."
+      },
+      "icon": "heart",
+      "settings": [
+        {
+          "key": "place",
+          "type": "select",
+          "source": "devices",
+          "required": false,
+          "label": {
+            "en": "Place",
+            "fr": "Lieu",
+            "de": "Ort",
+            "es": "Lugar"
+          },
+          "description": {
+            "en": "Empty: the first watched place.",
+            "fr": "Vide : le premier lieu suivi.",
+            "de": "Leer: der erste verfolgte Ort.",
+            "es": "Vacío: el primer lugar seguido."
+          }
+        },
+        {
+          "key": "count",
+          "type": "select",
+          "default": "3",
+          "required": false,
+          "label": {
+            "en": "Defibrillators shown",
+            "fr": "DAE affichés",
+            "de": "Angezeigte Defibrillatoren",
+            "es": "Desfibriladores mostrados"
+          },
+          "options": [
+            {
+              "value": "1",
+              "label": {
+                "en": "1",
+                "fr": "1",
+                "de": "1",
+                "es": "1"
+              }
+            },
+            {
+              "value": "3",
+              "label": {
+                "en": "3",
+                "fr": "3",
+                "de": "3",
+                "es": "3"
+              }
+            },
+            {
+              "value": "5",
+              "label": {
+                "en": "5",
+                "fr": "5",
+                "de": "5",
+                "es": "5"
+              }
+            }
+          ]
+        },
+        {
+          "key": "show_hours",
+          "type": "boolean",
+          "default": true,
+          "required": false,
+          "label": {
+            "en": "Show the hours",
+            "fr": "Afficher les horaires",
+            "de": "Zeiten anzeigen",
+            "es": "Mostrar el horario"
+          }
+        },
+        {
+          "key": "show_emergency",
+          "type": "boolean",
+          "default": true,
+          "required": false,
+          "label": {
+            "en": "Show the emergency numbers",
+            "fr": "Afficher les numéros d'urgence",
+            "de": "Notrufnummern anzeigen",
+            "es": "Mostrar los números de emergencia"
+          }
+        }
+      ]
     }
   ]
 }

@@ -1,67 +1,159 @@
-# Template de démonstration
+# Défibrillateurs
 
-Ceci est la documentation utilisateur de l'intégration. Gladys ré-héberge ce
-fichier et affiche un lien **Documentation** permanent vers lui dans l'écran
-de configuration (dans la langue de l'utilisateur, avec l'anglais en repli) —
-c'est au moment de configurer que l'utilisateur en a le plus besoin. Gardez
-les courtes indications d'accueil dans les blocs `section` du `config_schema`
-du manifest ; mettez ici le pas-à-pas détaillé (captures d'écran, dépannage…).
+Les **défibrillateurs (DAE) les plus proches** de votre maison, et des lieux que vous choisissez,
+dans Gladys : distance, adresse, emplacement précis, accès libre ou restreint, et **disponibilité
+maintenant** d'après les horaires déclarés par l'exploitant. Les données viennent de **Géo'DAE**, la
+base nationale des défibrillateurs (ministère de la Santé), publiée en open data sur data.gouv.fr.
+**Sans compte ni clé.**
+
+> **En cas d'urgence, appelez d'abord le 15 (SAMU) ou le 112.** L'opérateur vous guide et peut vous
+> indiquer le défibrillateur le plus proche. Cette intégration est un aide-mémoire du quotidien, jamais
+> un service de secours : les données sont déclarées par les exploitants et peuvent être fausses ou
+> périmées.
+
+Intégration non officielle, sans lien avec le ministère de la Santé, Atlasanté ni data.gouv.fr. Testée
+contre le vrai fichier national (15/11/2026), pas encore sur une vraie instance de Gladys : vos retours
+sont les bienvenus.
 
 ## Ce que vous obtenez
 
-Six appareils de démonstration apparaissent après l'installation : une
-station météo (vraies données Open-Meteo), un interrupteur, une lampe
-variable, une prise connectée avec mesure de puissance, un détecteur de
-mouvement et une caméra.
+- Un **appareil par lieu suivi** : chaque maison de Gladys dont la position est renseignée, et
+  jusqu'à 5 autres lieux (école, club, chez les parents…).
+- Pour le DAE le plus proche (à moins de 5 km) : sa **distance**, son **nom et son adresse**, son
+  **emplacement précis** (intérieur ou extérieur, étage, « hall d'accueil »…), son **accès** (libre
+  ou restreint), ses **horaires déclarés** et sa **disponibilité maintenant** (oui ou non).
+- Le **nombre de DAE dans le rayon** (1 km par défaut), et combien sont **disponibles maintenant**.
+- La **date des données**.
+- Un **widget** « DAE les plus proches » : les 3 plus proches d'un lieu, avec distance, accès, une
+  pastille verte, rouge ou grise, et au toucher l'adresse, l'emplacement, les horaires et un lien vers
+  la carte.
+- Une **action de scène** « DAE le plus proche » : une phrase prête à envoyer ou à dire, et des
+  nombres.
+
+## Prérequis
+
+- Gladys Assistant **5.3.0** ou plus récent.
+- Un accès à internet depuis Gladys, pour télécharger le fichier national sur data.gouv.fr (environ
+  80 Mo, une fois par semaine).
+- Pour les maisons : leur position renseignée dans Gladys (**Paramètres → Maisons**). Lieux en France
+  (métropole et outre-mer) seulement.
+
+## Installation
+
+1. Dans Gladys, ouvrez **Intégrations → Installer depuis GitHub**.
+2. Collez `https://github.com/guim31/gladys-defibrillateurs` et validez.
+3. Gladys demande de partager la position des maisons : elle sert seulement à trouver les DAE les plus
+   proches, et ne quitte jamais votre Gladys.
 
 ## Configuration
 
-1. Ouvrez l'onglet **Configuration** de l'intégration.
-2. Renseignez la **latitude** et la **longitude** que la station météo de
-   démonstration doit observer (Paris par défaut), et choisissez votre unité
-   de température. L'**intervalle de rafraîchissement** règle la fréquence
-   de lecture de la station météo et de la puissance de la prise : toutes
-   les 5 minutes par défaut, toutes les minutes au plus.
-3. Enregistrez : les appareils apparaissent dans l'onglet **Découverte**,
-   prêts à être ajoutés.
+### Réglages
 
-Le réglage **Préférer la connexion locale** pilote la prise de
-démonstration : elle affiche en badge le canal réellement utilisé (local ou
-cloud), avec un point orange quand elle fonctionne en mode dégradé (local
-refusé, bascule cloud).
+- **Rayon (m)** : pour le décompte des DAE autour de chaque lieu (1 000 m par défaut, de 100 à
+  5 000). Le plus proche est cherché jusqu'à 5 km, quel que soit le rayon.
+- **Autres lieux** : jusqu'à 5 lieux en plus des maisons, sous la forme `Nom : latitude, longitude`,
+  séparés par des points-virgules, avec des points décimaux :
+  `École : 43.6045, 1.4440 ; Club : 43.5830, 1.4340`. Un clic droit sur openstreetmap.org, puis
+  « Afficher l'adresse », donne les coordonnées d'un endroit. Renommer un lieu en fait un nouvel
+  appareil.
+- **Langue des noms et des messages** : français par défaut. Les noms des fonctionnalités sont figés à
+  l'ajout d'un appareil ; les textes suivent la langue tout de suite.
 
-## Actions
+### Ajouter des lieux
 
-- **Tester le fournisseur météo** — effectue une requête en direct vers
-  Open-Meteo et affiche la température et l'humidité actuelles sous le
-  bouton.
-- **Identifier un appareil** — choisissez un de vos appareils dans la liste
-  et il se signale (la lampe de démonstration « clignote » dans les logs).
+Enregistrez la configuration : les lieux apparaissent dans l'onglet **Découverte** de l'intégration.
+Ajoutez ceux que vous voulez suivre.
 
-## Scènes
+### Vérifier
 
-L'intégration ajoute ses propres cartes à l'éditeur de scènes (Gladys 5.1
-ou plus récent), dans la catégorie **Intégrations** :
+Le bouton **État** donne le nombre de lieux suivis, les DAE retenus à moins de 5 km, la date des
+données et la dernière erreur.
 
-- **Mouvement détecté** (déclencheur) — lance la scène quand un détecteur
-  de démonstration voit bouger quelque chose. Choisissez éventuellement le
-  détecteur et ce qui a bougé (personne, animal) ; laissés vides, toute
-  détection correspond. Les actions suivantes peuvent lire ce qui a bougé
-  avec `{{triggerEvent.data.target}}`.
-- **Identifier un appareil** (action) — fait se signaler l'appareil choisi.
-  Elle indique si l'appareil a pu se signaler, pour que les actions
-  suivantes puissent en dépendre.
+## Appareils
 
-## Tableau de bord
+Chaque lieu est un appareil « Défibrillateurs – <lieu> » avec ces fonctionnalités (noms dans la langue
+configurée) :
 
-Ajoutez le widget **État de la démo** à un tableau de bord : il affiche en
-direct la température de la station météo et la puissance de la prise du
-bureau, la connexion utilisée par la prise (en orange si dégradée) et la
-position observée. Son bouton **Identifier la lampe** fait se signaler la
-lampe de démonstration.
+| Fonctionnalité                       | Type     | Valeur                                                    |
+| ------------------------------------ | -------- | --------------------------------------------------------- |
+| Distance du DAE le plus proche       | distance | en mètres, jusqu'à 5 km                                   |
+| DAE le plus proche                   | texte    | nom et adresse                                            |
+| Emplacement précis                   | texte    | intérieur ou extérieur, étage, emplacement                |
+| Accès                                | texte    | accès libre ou restreint                                  |
+| Horaires de disponibilité            | texte    | horaires déclarés, « Horaires non déclarés »              |
+| Disponible maintenant                | binaire  | 1 quand les horaires déclarés couvrent la minute en cours |
+| DAE dans le rayon                    | compteur | dans le rayon de la configuration                         |
+| Disponibles maintenant dans le rayon | compteur | dont disponibles maintenant                               |
+| Date des données                     | texte    | date du fichier national                                  |
+
+« Disponible maintenant » vaut **0 quand les horaires ne sont pas déclarés** : environ deux DAE sur
+trois n'en ont pas dans le fichier national. Le texte des horaires fait la différence.
+
+## Widget du tableau de bord
+
+**DAE les plus proches** montre les défibrillateurs les plus proches d'un lieu : nom, distance, accès
+et une pastille « Disponible » (verte), « Fermé » (rouge) ou « Horaires ? » (grise, horaires non
+déclarés). Touchez-en un pour lire son adresse, son emplacement, ses horaires et un lien vers la carte.
+Réglages : le lieu (le premier par défaut), 1, 3 ou 5 DAE, afficher les horaires, afficher les numéros
+d'urgence.
+
+## Action de scène
+
+**DAE le plus proche** (Alors → Intégrations) : pour un lieu (le premier par défaut), une **phrase**
+prête à envoyer dans un message ou à dire (« DAE le plus proche de Maison : Mairie, à 120 m, 1 place du
+Capitole, 31000 Toulouse (hall d'accueil). Accès libre, disponible maintenant. »), la **distance** en
+mètres (-1 si aucun à moins de 5 km), **disponible maintenant** (1 ou 0) et le nombre de DAE
+**disponibles maintenant dans le rayon**.
+
+Pas de déclencheur de scène propre : pour être prévenu quand plus aucun DAE n'est disponible autour de
+la maison, utilisez le déclencheur d'appareil de Gladys sur « Disponibles maintenant dans le rayon »
+égal à 0.
+
+## Exemples de scènes
+
+- **Baby-sitting** : à 20 h, envoyez la phrase de l'action de scène sur le Telegram de la baby-sitter,
+  avec les numéros d'urgence.
+- **Soirée au club** : quand les « Disponibles maintenant dans le rayon » du club tombent à 0, envoyez
+  un message à l'entraîneur.
+
+## Données et rafraîchissement
+
+- Source : le fichier national **Géo'DAE**, ressource CSV du jeu de données « Géo'DAE - Base Nationale
+  des Défibrillateurs » sur data.gouv.fr, publié par Atlasanté, **Licence Ouverte 2.0**.
+- Le fichier (environ 80 Mo, 190 000 lignes) est téléchargé **une fois par semaine**, lu en flux et
+  filtré au passage : seuls les DAE à moins de 5 km de vos lieux sont gardés (quelques centaines en
+  ville), enregistrés dans `/data` pour qu'un redémarrage ne télécharge rien. Un nouveau lieu hors de
+  cette zone le télécharge de nouveau tout de suite. Un téléchargement raté est retenté 3 heures plus
+  tard, les dernières données restant en place.
+- Écartés : les DAE déclarés hors service, absents momentanément, supprimés, les doublons, les DAE
+  mobiles (dans un véhicule) et ceux dont la position est mise en doute.
+- « Disponible maintenant » est évalué **chaque minute** d'après les horaires déclarés (format
+  OpenStreetMap), jours fériés compris, sans aucune requête.
 
 ## Dépannage
 
-L'intégration journalise tout ce qu'elle fait : consultez les logs de
-l'intégration depuis l'interface Gladys (ou `docker logs` sur l'hôte) avec
-`LOG_LEVEL=debug` pour le détail complet.
+- **Aucun appareil dans l'onglet Découverte** : renseignez la position de la maison dans Gladys, ou
+  ajoutez un lieu dans la configuration, puis enregistrez.
+- **« Pas encore de données »** : le fichier national n'a pas pu être téléchargé ; le bouton État
+  donne l'erreur. Vérifiez l'accès à internet de Gladys.
+- **Un lieu est ignoré** : les logs de l'intégration disent lequel ; utilisez des points décimaux
+  (`43.6045, 1.4440`), pas des virgules.
+- **Un DAE manque ou est faux** : les données sont déclarées par les exploitants sur
+  geodae.atlasante.fr ; signalez-y l'erreur.
+
+## Limites
+
+- France seulement (métropole et outre-mer) : Géo'DAE ne couvre aucun autre pays.
+- Les données sont déclaratives : position, horaires et état peuvent être faux. La plupart des DAE ne
+  déclarent aucun horaire ; « disponible maintenant » vaut alors 0 et la pastille est grise.
+- Les fermetures exceptionnelles non déclarées dans le fichier sont inconnues.
+- La distance est à vol d'oiseau, pas à pied.
+- Développée sans le matériel (aucun défibrillateur en jeu, seulement des données publiques) : vos
+  retours sont les bienvenus.
+
+## Crédits
+
+- Données : **Géo'DAE**, ministère de la Santé, publiées par Atlasanté sur data.gouv.fr, Licence
+  Ouverte 2.0.
+- Construite sur le [SDK d'intégration de Gladys](https://github.com/GladysAssistant/integration-sdk-js).
+- Sans lien avec le ministère de la Santé, Atlasanté ni data.gouv.fr.

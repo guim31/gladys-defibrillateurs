@@ -30,6 +30,13 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+The integration stores in `/data` only the defibrillators kept around the
+watched places (public data of the Géo'DAE file) and the coordinates of these
+places. It holds no secret and needs no account. Its only network access is an
+HTTPS download from data.gouv.fr, once a week. The location of the houses is
+read from Gladys (`location` authorization) and never sent anywhere: the whole
+national file is downloaded and filtered locally.
+
 Out of scope: Gladys Assistant itself (see its
 [security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
 and the third-party services and devices the integration talks to.

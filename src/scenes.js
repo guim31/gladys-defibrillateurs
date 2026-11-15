@@ -1,41 +1,44 @@
 // -----------------------------------------------------------------------------
-// Scene actions (SDK v0.14+, Gladys 5.1+).
+// Scene actions (manifest `scene_actions`, Gladys 5.1+).
 //
-// A scene action is an OPERATION a scene author places in a scene, with
-// parameters and a result: "identify this device", "take a snapshot", "clean
-// these rooms". Each one is declared in the manifest `scene_actions` field
-// (key, label, `fields` in the config_schema grammar, scalar `outputs`) and
-// handled here, keyed by that same `key`; index.js registers every entry with
-// `gladys.onSceneAction(key, ...)`.
+// - nearest: the nearest defibrillator of a watched place as a sentence ready
+//   for a message or a speaker ("DAE le plus proche de Maison : Mairie, à
+//   120 m, … Accès libre, disponible maintenant."), plus numbers for a
+//   "Continue only if" step.
 //
-// Scene TRIGGERS are the other direction ("this happened"): they are fired by
-// the device that observes the event, see src/devices/motionSensor.js.
-//
-// The rules that matter:
-//   - `fields` arrive RESOLVED: scene variables substituted, defaults applied,
-//     validated by the core; a `"source": "devices"` field is the chosen
-//     device external_id;
-//   - resolve an object of the declared `outputs` (scalars only), readable by
-//     the following actions of the scene, or `undefined` for none. Keys not
-//     declared in the manifest are dropped by the core;
-//   - throwing fails THIS action only: the scene logs it and continues. A
-//     scene action is never a condition: return an output and let the scene
-//     author gate on it;
-//   - never fire a scene event as a consequence of a received action: a scene
-//     bound to that event would loop through the integration.
+// A scene action does not receive the user's language: the sentence follows
+// the `language` of the configuration. Outputs are numbers, never booleans:
+// the core's "Continue only if" compares with ===.
 // -----------------------------------------------------------------------------
 
-import { createLogger } from '@gladysassistant/integration-sdk';
-import { signalDevice } from './devices/index.js';
+import { TEXT, say } from './messages.js';
 
-const logger = createLogger({ name: 'scenes' });
+export class SceneError extends Error {}
 
 export const SCENE_ACTIONS = {
-  // The ack is awaited under the action's `timeout_seconds` (15 s in the
-  // manifest), counted from the moment the scene reaches the action.
-  async identify_device(gladys, { fields, config }) {
-    logger.info(`Scene action identify_device <- ${fields.device}`);
-    const signalled = await signalDevice(gladys, fields.device, config);
-    return { signalled };
+  async nearest(service, { fields }) {
+    const language = service.config.language;
+    // Asked right at start: the first reading, not "no data".
+    await service.firstReading();
+    const watched = service.watched();
+    if (watched.length === 0) {
+      throw new SceneError(say(TEXT, language, 'noPlace'));
+    }
+    const asked = [fields?.place].flat().filter(Boolean).map(String)[0];
+    const entry = asked ? watched.find((w) => w.deviceId === asked) : watched[0];
+    if (!entry) {
+      throw new SceneError(say(TEXT, language, 'gone'));
+    }
+    if (!service.data || !service.covers([entry])) {
+      throw new SceneError(say(TEXT, language, 'noData'));
+    }
+    const view = service.view(entry);
+    const nearest = view.list[0];
+    return {
+      sentence: service.sentence(entry, language),
+      distance: nearest ? nearest.meters : -1,
+      available_now: nearest?.available === true ? 1 : 0,
+      available_count: view.availableCount,
+    };
   },
 };
