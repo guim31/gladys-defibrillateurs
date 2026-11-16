@@ -32,15 +32,22 @@ pushing.
 
 ```
 index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
-src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
-src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
+src/app.js                        registers every SDK handler, shared by index.js and the tests
+src/service.js                    runtime: places, weekly download, /data cache, minute clock, states, texts
+src/geodae.js                     Géo'DAE download, streamed and filtered by distance, rows → defibrillators
+src/csv.js                        streaming CSV parser (quotes, separators and line breaks in fields)
+src/hours.js                      OpenStreetMap subset of c_dispo_horaires, available at a local time
+src/holidays.js                   French public holidays, offline (Alsace-Moselle, overseas)
+src/clock.js                      dates and local time
+src/devices.js                    device of a place, its states, hours and location texts
+src/messages.js                   every text sent by the container, in en/fr/de/es
+src/scenes.js                     scene action nearest
+src/widgets.js                    dashboard widget nearest
+src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization, places
 gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys (mandatory)
 test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+test/fixtures/geodae              real extract of the national file (2026-11-15)
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -251,3 +258,35 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
 - Docs `en`, `fr`, `de`, `es` avec les mêmes sections.
 - Chauffe, ouverture, sécurité : ne rien rendre pilotable « comme un thermostat » ou par un assistant
   vocal quand une erreur serait dangereuse (leçon d'OctoPrint).
+
+## Défibrillateurs (cette intégration)
+
+- **Source** : ressource CSV `edb6a9e1-2f16-4bbf-99e7-c3eb6b90794c` du jeu « Géo'DAE - Base Nationale des
+  Défibrillateurs » (Atlasanté, data.gouv.fr), lien stable `api/1/datasets/r/<id>` qui redirige vers le
+  fichier du jour (~80 Mo, ~192 000 lignes, séparateur `;`, guillemets doubles avec `;` et sauts de ligne
+  dans les champs). Il existe aussi un JSON de 220 Mo, inutile. L'API tabulaire de data.gouv sait filtrer,
+  mais le brief demandait un téléchargement hebdomadaire filtré : lecture en flux (`CsvParser`), boîte
+  englobante puis distance, seuls les DAE à moins de `SEARCH_KM` (5 km) des lieux gardés. Moins de
+  `MIN_ROWS` (10 000) lignes ou pas de colonnes de coordonnées = échec, données précédentes gardées.
+- **Colonnes utiles** : `c_gid` (identifiant), `c_nom`, `c_lat_coor1`/`c_long_coor1`, `c_adr_num`,
+  `c_adr_voie`, `c_com_cp`, `c_com_nom`, `c_com_insee` (département des fériés), `c_acc` (Intérieur /
+  Extérieur), `c_acc_lib` (`t` = accès libre), `c_acc_etg`, `c_acc_complt` (emplacement précis),
+  `c_dispo_horaires` (OSM), `c_disp_complt`. Écartés : `c_etat_fonct` Hors service / Supprimé
+  définitivement / Absent momentanément, `c_etat` A supprimer, `c_etat_valid` mises en doute,
+  `c_doublon` = t, `c_dae_mobile` = t.
+- **Horaires** : « Mo-Su off » (61 %) et « OFF » sont ce qu'écrit le formulaire quand rien n'est saisi :
+  aucune plage ouverte dans la semaine = **non déclaré** (`available` à 0, badge gris), jamais « jamais
+  disponible ». Sous-ensemble lu : `24/7`, jours (`Mo-Fr`, listes), `PH`, dates de l'année (`Jul 20-Aug 24`,
+  `Dec 24`), plages horaires multiples, `off`, plages passant minuit ; 23:59 = minuit. Hors sous-ensemble
+  (0,15 %) = non déclaré.
+- **Lieux** : maisons localisées (`location: true`, clé `house-<selector>`) et jusqu'à 5 lieux de la config
+  (`place-<slug du nom>`, points décimaux obligatoires). Les coordonnées sont aussi dans les `params` de
+  l'appareil : un lieu retiré de la config reste suivi. Le cache `/data/geodae-cache.json` couvre les lieux
+  du dernier téléchargement (`coverage`, 200 m) ; un lieu hors couverture relance le téléchargement.
+- **Pas de déclencheur** : « aucun DAE disponible maintenant » se fait avec le déclencheur d'appareil du
+  cœur sur `available_count` = 0.
+- **Fuseau** : les horaires déclarés sont lus dans le fuseau du DAE (`zoneOf` du département : Paris, ou
+  Guadeloupe, Réunion, Mayotte…), pas dans le `TZ` de Gladys. **Aucun DAE à moins de 5 km** : toutes les
+  fonctionnalités le disent (distance 5000, `available` 0, textes « Aucun DAE… »), pour qu'aucune ne garde les
+  valeurs d'un ancien emplacement. Les maisons sont relues toutes les heures par la minute ; un scan ou une
+  configuration enregistrée relance un téléchargement raté sans attendre les 3 h.
