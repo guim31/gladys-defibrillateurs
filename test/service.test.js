@@ -17,6 +17,7 @@ import {
   MOUNTAIN,
   VILLAGE,
   action,
+  failedAction,
   at,
   create,
   createFetch,
@@ -59,7 +60,7 @@ test('a house without location, and no place: nothing offered, nothing downloade
   t.after(() => world.app.stop());
   assert.deepEqual(world.fake.discoveredDevices, []);
   assert.equal(world.network.calls.length, 0);
-  const message = await action(world, 'status');
+  const message = await failedAction(world, 'status');
   assert.match(message.fr, /Aucun lieu/);
 });
 
@@ -68,6 +69,8 @@ test('Toulouse centre: the nearest defibrillator, the counts within 1 km, the da
   t.after(() => world.app.stop());
   const house = await create(world, 'Maison');
   assert.equal(lastState(world, house, 'distance'), 18);
+  // Data and a place: a success, shown in green.
+  assert.match((await action(world, 'status')).en, /\S/);
   assert.equal(
     lastState(world, house, 'nearest'),
     'DAE_Cerema_OCC_Toulouse_Bâtiment_Principal, 1 Avenue du Colonel Roche, 31100 Toulouse',
@@ -157,7 +160,7 @@ test('a failed download: the last data are kept, a new attempt 3 hours later', a
   network.route = 503;
   await at(world, world.clock.time + 2 * MINUTE);
   assert.equal(network.calls.length, 3);
-  const message = await action(world, 'status');
+  const message = await failedAction(world, 'status');
   assert.match(message.en, /Last download failed: data\.gouv\.fr: HTTP 503/);
   // The connection status is kept: the data are still there.
   assert.deepEqual(world.fake.connectionStatuses, []);

@@ -143,6 +143,15 @@ export async function action(world, key, fields = {}) {
   return ack.data.message;
 }
 
+/** Run a configuration action expected to fail (shown in red); resolves with its error. */
+export async function failedAction(world, key, fields = {}) {
+  const ack = await world.fake.action(key, fields);
+  if (ack.success) {
+    throw new Error(`${key} succeeded: ${JSON.stringify(ack.data)}`);
+  }
+  return ack.error;
+}
+
 /** The device published for a name part or a predicate, from the last discovery list. */
 export const discovered = (world, predicate) =>
   world.fake.discoveredDevices.find(

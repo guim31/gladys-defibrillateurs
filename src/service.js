@@ -42,6 +42,14 @@ const finite = (value) => {
   return value !== null && value !== '' && Number.isFinite(number) ? number : null;
 };
 
+/** A failed action: Gladys shows the message in red, in the user's language. */
+export class ActionFailure extends Error {
+  constructor(text) {
+    super(text.en);
+    this.message = text;
+  }
+}
+
 export class Defibrillators {
   /**
    * @param {object} options
@@ -552,6 +560,10 @@ export class Defibrillators {
         lines.push(say(TEXT, language, 'reportError', { error: this.error }));
       }
       message[language] = lines.join('\n');
+    }
+    // No place, no data or a failed download: an error, shown in red by Gladys.
+    if (this.neededPlaces().length === 0 || !this.data || this.error) {
+      throw new ActionFailure(message);
     }
     return message;
   }
