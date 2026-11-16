@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-16
+
 ### Added
 
 - A device per watched place (each located house of Gladys, and up to 5 places
@@ -25,3 +27,6 @@ the notes of the version's GitHub Release.
   the distance, available now and the count available in the radius.
 - The national file is downloaded once a week, streamed and filtered around
   the places, and kept under `/data`. English, French, German and Spanish.
+
+[Unreleased]: https://github.com/guim31/gladys-defibrillateurs/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/guim31/gladys-defibrillateurs/releases/tag/v1.0.0
